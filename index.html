@@ -1,0 +1,495 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Games</title>
+<link rel="shortcut icon" href="images/favicon.png" type="image/png">
+<link rel="stylesheet" type="text/css" href="css/font-awesome.css">
+<style>
+	@font-face{
+        font-family: Phantom-cyr-lat;
+        src: url(fonts/Phantom-cyr-lat.ttf);
+    }
+	html {
+    	height: 100%;
+	}
+	body{
+		width: 100%;
+		height: 100%;
+		margin: 0;
+    	padding: 0;
+		text-align: center;
+		background: #4b8a94;
+    	background: linear-gradient(135deg, #3fb4ac, #5b5476);
+    	background-size: contain;
+    	overflow: hidden;
+	}
+	#container {
+		width:540px;
+		height:330px;
+		margin: 5px auto;
+		border: 1px solid rgba(255,255,255, .7);
+		overflow: hidden;
+		position: relative;
+	}
+	#head {
+		width: 30px;
+		height: 30px;
+		background-image: url(images/pacman.png);
+		background-size: cover;
+	}
+	#ghost {
+		width: 30px;
+		height: 30px;
+		background-size: cover;
+		position: absolute;
+	}
+	.row{
+		margin-bottom: 5px;
+	}
+	button {
+		border: 1px solid rgba(255,255,255, .7);
+		border-radius: 5px;
+		width: 40px;
+		height: 40px;
+		padding: 5px 7px;
+		background: transparent;
+		font-family: FontAwesome;
+		color: rgba(255,255,255, .7);
+		cursor: pointer;
+	}
+	#buttonStop, #buttonRe{
+		font-family: Phantom-cyr-lat;
+		padding-left: 0px;
+		padding-right: 0px;
+		font-size: 12px;
+	}
+	#buttonStop{
+		width: 100px;
+	}
+	#buttonRe{
+		width: 40px;
+	}
+	button:hover {
+		box-shadow: 0px 0px 5px rgba(255,255,255, .7);
+	}
+	button.noPressBut:hover {
+		box-shadow: none;
+	}
+	button:focus {
+		outline: none;
+	}
+	#info{
+		width: 540px;
+		height: auto;
+		margin: 20px auto;
+		border-top: 1px solid rgba(255,255,255, .7);
+		font-family: Phantom-cyr-lat;
+		letter-spacing: 2px;
+		color: rgba(255,255,255, .7);
+	}
+	#info .col{
+		box-sizing: border-box;
+		width: 50%;
+		height: auto;
+		padding: 10px;
+	}
+	#info .leftcol{
+		float: left;
+		text-align: left;
+	}
+	#info .rightcol{
+		float: right;
+		text-align: right;
+	}
+	#info .fa-heart{
+		display: inline;
+		font-family: FontAwesome;
+		font-size: 18px;
+	}
+	.loseLife{
+		visibility: hidden;
+	}
+</style>
+</head>
+<body>
+
+	<div id='container'>
+		<div id="head"></div>
+		<div id="ghost"></div>
+	</div>
+	
+	<div>
+		<div class="row">
+			<button><span class="fas fa-arrow-up"></span></button>
+		</div>
+		<div class="row">
+			<button><span class="fas fa-arrow-left"></span></button>
+			<button><span class="fas fa-arrow-down"></span></button>
+			<button><span class="fas fa-arrow-right"></span></button>
+		</div>
+	</div>
+	<div>
+		<button id="buttonStop">SPACE</button>
+		<button id="buttonRe">ESC</span></button>
+	</div>
+
+	<div id='info'>
+		<div class='col leftcol'>
+			<div>Счет: <span id='score'>0</span></div>
+			<div>Лучший счет: <span id='scoreBest'>0</span></div>
+		</div>
+		<div class='col rightcol'>
+			<div id='life'>
+				<span class="fas fa-heart"></span>
+				<span class="fas fa-heart"></span>
+				<span class="fas fa-heart"></span>
+				<span class="fas fa-heart"></span>
+				<span class="fas fa-heart"></span>
+			</div>
+		</div>
+	</div>
+
+<script>
+
+	var movedElem = document.getElementById('head');
+	var inputs = document.querySelectorAll('button');
+	var container = document.getElementById('container');
+
+	var x = 0;
+	var y = 0;
+
+	var canMoveLeft = false;
+	var canMoveRight = true;
+	var canMoveUp = false;
+	var canMoveDown = true;
+	var canRestart = false;
+
+	var intR, intL, intU, intD;
+
+	var containerLeft = container.getBoundingClientRect().left;
+	var containerTop = container.getBoundingClientRect().top;
+	var containerWidth = container.getBoundingClientRect().width;
+	var containerHeight = container.getBoundingClientRect().height;
+	var containerBorder = parseInt(window.getComputedStyle(container).borderWidth);
+
+	var movedElemLeft = movedElem.getBoundingClientRect().left;
+	var movedElemTop = movedElem.getBoundingClientRect().top;
+	var movedElemWidth = movedElem.getBoundingClientRect().width;
+	var movedElemHeight = movedElem.getBoundingClientRect().height;
+
+	var lives = document.getElementById('life').children;
+	var countLoseLives = 0;
+
+	var ghost = document.getElementById('ghost');
+
+	var ghostPosTopArr = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300];
+	var ghostPosLeftArr = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510];
+	var ghosts = ['images/ghost1.png', 'images/ghost2.png', 'images/ghost3.png', 'images/ghost4.png'];
+
+	var ghostLeft = ghost.getBoundingClientRect().left;
+	var ghostTop = ghost.getBoundingClientRect().top;
+	var ghostWidth = ghost.getBoundingClientRect().width;
+	var ghostHeight = ghost.getBoundingClientRect().height;
+
+	var butMoveUp = inputs[0];
+	var butMoveLeft = inputs[1];
+	var butMoveDown = inputs[2];
+	var butMoveRight = inputs[3];
+	var butStop = inputs[4];
+	var butRe = inputs[5];
+
+	var elemScore = document.getElementById('score');
+	var elemScoreBest = document.getElementById('scoreBest');
+
+	var score = 0;
+	var scoreBest = 0;
+	var scoreBestSaved = scoreBest;
+
+	butMoveUp.addEventListener('click', moveUp);
+	butMoveLeft.addEventListener('click', moveLeft);
+	butMoveDown.addEventListener('click', moveDown);
+	butMoveRight.addEventListener('click', moveRight);
+	butStop.addEventListener('click', moveStop);
+	butRe.addEventListener('click', moveBack);
+
+	document.body.addEventListener('keydown', pressBut);
+
+	head.style.transform = 'rotate(0deg)';
+	disabledBut(butMoveUp);
+	disabledBut(butMoveLeft);
+	disabledBut(butStop);
+	disabledBut(butRe);
+	newGhost();
+
+	function result(){
+		score++;
+		scoreBest++;
+		elemScore.innerHTML = score;
+		if(scoreBest >= scoreBestSaved) elemScoreBest.innerHTML = scoreBest;
+		if(scoreBestSaved<scoreBest) scoreBestSaved = scoreBest;
+	}
+
+	function pressBut(){
+		if(event.keyCode == 37){moveLeft();}
+		if(event.keyCode == 39){moveRight();}
+		if(event.keyCode == 38){moveUp();}
+		if(event.keyCode == 40){moveDown();}
+		if(canRestart){
+			if(event.keyCode == 27){moveBack();}
+		}
+		if(canMoveLeft || canMoveRight || canMoveUp || canMoveDown) {
+			if(((movedElem.getBoundingClientRect().top - containerBorder - containerTop) != 0) || ((movedElem.getBoundingClientRect().left - containerBorder - containerLeft) !=0 )) {
+				if(event.keyCode == 32){moveStop();}
+			}
+		}
+	}
+
+	function moveRight(){
+		if(canMoveRight){
+			head.style.transform = 'rotate(0deg)';
+			clearInts();
+			intR = setInterval('moveR()', 300);
+		}
+	}
+	function moveLeft(){
+		if(canMoveLeft){
+			head.style.transform = 'scale(-1,1)';
+			clearInts();
+			intL = setInterval('moveL()', 300);
+		}
+	}
+	function moveUp(){
+		if(canMoveUp){
+			head.style.transform = 'rotate(270deg)';
+			clearInts();
+			intU = setInterval('moveU()', 300);
+		}
+	}
+	function moveDown(){
+		if(canMoveDown){
+			head.style.transform = 'rotate(90deg)';
+			clearInts();
+			intD = setInterval('moveD()', 300);
+		}
+	}
+	function moveStop(){
+		clearInts();
+		canMoveUp = true;
+		canMoveDown = true;
+		canMoveRight = true;
+		canMoveLeft = true;
+		disabledBut(butStop);
+		activeBut(butMoveUp);
+		activeBut(butMoveLeft);
+		activeBut(butMoveDown);
+		activeBut(butMoveRight);
+	}
+	function moveBack(){
+		clearInts();
+		newGhost();
+		canMoveLeft = false;
+		canMoveRight = true;
+		canMoveUp = false;
+		canMoveDown = true;
+		canRestart = false;
+		x = 0;
+		y = 0;
+		movedElem.style.marginLeft = x+'px';
+		movedElem.style.marginTop = y+'px';
+		head.style.transform = 'rotate(0deg)';
+		disabledBut(butMoveUp);
+		disabledBut(butMoveLeft);
+		activeBut(butMoveDown);
+		activeBut(butMoveRight);
+		disabledBut(butStop);
+		disabledBut(butRe);
+	}
+
+	function clearInts(){
+		clearInterval(intR);
+		clearInterval(intL);
+		clearInterval(intU);
+		clearInterval(intD);
+	}
+
+	function getParamMovedElem(){
+		movedElemLeft = movedElem.getBoundingClientRect().left;
+		movedElemTop = movedElem.getBoundingClientRect().top;
+		ghostLeft = ghost.getBoundingClientRect().left;
+		ghostTop = ghost.getBoundingClientRect().top;
+	}
+	
+	function moveR(){
+		getParamMovedElem();
+		canMoveLeft = false;
+		canMoveUp = true;
+		canMoveDown = true;
+		x+=30;
+		activeBut(butMoveRight);
+		activeBut(butMoveUp);
+		activeBut(butMoveDown);
+		activeBut(butStop);
+		disabledBut(butMoveLeft);
+		if((containerLeft+containerWidth-containerBorder-movedElemWidth) == movedElemLeft){
+			loseLife();
+			clearInts();
+			x = containerWidth-2*containerBorder-movedElemWidth;
+			movedElem.style.marginLeft = x+'px';
+		}
+		if((containerTop+containerBorder) == movedElemTop){ 
+			canMoveUp = false;
+		}
+		if((containerTop+containerHeight-containerBorder-movedElemHeight) == movedElemTop){
+			canMoveDown = false;
+		}
+		movedElem.style.marginLeft = x+'px';
+		if((movedElemLeft+movedElemWidth) == ghostLeft && movedElemTop == ghostTop){
+			newGhost(); 
+			result();
+		}
+	}
+	function moveL(){
+		getParamMovedElem();
+		canMoveRight = false;
+		canMoveUp = true;
+		canMoveDown = true;
+		x-=30;
+		activeBut(butMoveLeft);
+		activeBut(butMoveUp);
+		activeBut(butMoveDown);
+		disabledBut(butMoveRight);
+		if((containerLeft+containerBorder) == movedElemLeft){
+			loseLife();
+			clearInts();
+			x = 0;
+			movedElem.style.marginLeft = x+'px';
+		}
+		if((containerTop+containerBorder) == movedElemTop){ 
+			canMoveUp = false;
+		}
+		if((containerTop+containerHeight-containerBorder-movedElemHeight) == movedElemTop){
+			canMoveDown = false; 
+		}
+		movedElem.style.marginLeft = x+'px';
+		if(movedElemLeft == (ghostLeft+ghostWidth) && movedElemTop == ghostTop){
+			newGhost(); 
+			result();
+		}
+	}
+	function moveU(){
+		getParamMovedElem();
+		canMoveDown = false;
+		canMoveRight = true;
+		canMoveLeft = true;
+		y-=30;
+		activeBut(butMoveUp);
+		activeBut(butMoveLeft);
+		activeBut(butMoveRight);
+		disabledBut(butMoveDown);
+		if((containerTop+containerBorder) == movedElemTop){
+			loseLife();
+			clearInts();
+			y = 0;
+			movedElem.style.marginTop = y+'px';
+		}
+		if((containerLeft+containerWidth-containerBorder-movedElemWidth) == movedElemLeft){ 
+			canMoveRight = false;
+		}
+		if((containerLeft+containerBorder) == movedElemLeft){
+			canMoveLeft = false;
+		}
+		movedElem.style.marginTop = y+'px';
+		if(movedElemTop == (ghostTop+ghostHeight) && movedElemLeft == ghostLeft){
+			newGhost(); 
+			result();
+		}
+	}
+	function moveD(){
+		getParamMovedElem();
+		canMoveUp = false;
+		canMoveRight = true;
+		canMoveLeft = true;
+		y+=30;
+		activeBut(butMoveDown);
+		activeBut(butMoveLeft);
+		activeBut(butMoveRight);
+		activeBut(butStop);
+		disabledBut(butMoveUp); 
+		if((containerTop+containerHeight-containerBorder-movedElemHeight) == movedElemTop){
+			loseLife();
+			clearInts();
+			y = containerHeight-2*containerBorder-movedElemHeight;
+			movedElem.style.marginTop = y+'px';
+		}
+		if((containerLeft+containerWidth-containerBorder-movedElemWidth) == movedElemLeft){
+			canMoveRight = false;
+		}
+		if((containerLeft+containerBorder) == movedElemLeft){
+			canMoveLeft = false;
+		}
+		movedElem.style.marginTop = y+'px';
+		if((movedElemTop+movedElemHeight) == ghostTop && movedElemLeft == ghostLeft){
+			newGhost(); 
+			result();
+		}
+	}
+
+	function loseLife(){
+		canMoveLeft = false;
+		canMoveRight = false;
+		canMoveUp = false;
+		canMoveDown = false;
+		canRestart = true;
+		lives[countLoseLives].classList.add('loseLife');
+		countLoseLives++;
+		disabledBut(butMoveUp);
+		disabledBut(butMoveLeft);
+		disabledBut(butMoveDown);
+		disabledBut(butMoveRight);
+		disabledBut(butStop);
+		activeBut(butRe);
+		if(countLoseLives == lives.length){
+			disabledBut(butRe);
+			document.body.removeEventListener('keydown', pressBut);
+		}
+		ghost.style.backgroundImage = 'none';
+		score = 0;
+		scoreBest = 0;
+		elemScore.innerHTML = score;
+	}
+
+	function disabledBut(but){
+		but.setAttribute('disabled', 'disabled');
+		but.style.color = 'rgba(255,255,255, .3)';
+		but.style.borderColor = 'rgba(255,255,255, .3)';
+		but.classList.add('noPressBut');
+	}
+	function activeBut(but){
+		but.removeAttribute('disabled');
+		but.style.color = 'rgba(255,255,255, .7)';
+		but.style.borderColor = 'rgba(255,255,255, .7)';
+		but.classList.remove('noPressBut');
+	}
+
+	function rand(min_num, max_num){
+		return Math.round(Math.random()*(max_num-min_num)+min_num);
+	}
+	
+	function newGhost(){
+		getParamMovedElem();
+		var ghostPosTop = ghostPosTopArr[rand(0, (ghostPosTopArr.length-1))];
+		var ghostPosLeft = ghostPosLeftArr[rand(0, (ghostPosLeftArr.length-1))];
+		if(((ghostPosTop+containerTop+containerBorder) == movedElemTop) && ((ghostPosLeft+containerLeft+containerBorder) == movedElemLeft)){
+			console.log('GOOD');
+			newGhost();
+		} else{
+			ghost.style.top = ghostPosTop + 'px';
+			ghost.style.left = ghostPosLeft + 'px';
+			ghost.style.backgroundImage = 'url('+ghosts[rand(0, (ghosts.length-1))]+')';
+		}
+	}
+
+</script>
+</body>
+</html>
